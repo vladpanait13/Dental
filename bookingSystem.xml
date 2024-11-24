@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities schema="dental:srcSchema">
+    <srcSchema desc="Defines the structure and relationships of a dental booking system" entitySchema="dental:schema">
+        <!-- Enumerations -->
+        <enumeration basetype="byte" name="userType">
+            <value label="--Please Select--" name="undefined" value="0"/>
+            <value label="Admin" name="admin" value="1"/>
+            <value label="Dentist" name="dentist" value="2"/>
+            <value label="Patient" name="patient" value="3"/>
+        </enumeration>
+
+        <enumeration basetype="byte" name="appointmentStatus">
+            <value label="--Please Select--" name="undefined" value="0"/>
+            <value label="Pending" name="pending" value="1"/>
+            <value label="Confirmed" name="confirmed" value="2"/>
+            <value label="Cancelled" name="cancelled" value="3"/>
+            <value label="Completed" name="completed" value="4"/>
+        </enumeration>
+
+        <!-- User Element -->
+        <element desc="Defines the properties of a user account" name="user">
+            <attribute label="User ID" name="id" type="string" isPK="true"/>
+            <attribute label="Email Address" name="email" type="string" unique="true"/>
+            <attribute label="First Name" name="firstName" type="string"/>
+            <attribute label="Last Name" name="lastName" type="string"/>
+            <attribute label="Phone Number" name="phone" type="string"/>
+            <attribute enum="userType" label="User Role" name="role" type="byte"/>
+            <attribute label="Active Status" name="isActive" type="boolean"/>
+            <attribute label="Created Date" name="createdAt" type="datetime"/>
+            <attribute label="Updated Date" name="updatedAt" type="datetime"/>
+            
+            <!-- Relationship definitions -->
+            <element name="dentistSchedules" type="link" target="dentistSchedule" label="Dentist Schedules" revLink="dentist"/>
+            <element name="providedServices" type="link" target="service" label="Services Provided" revLink="dentist"/>
+            <element name="patientAppointments" type="link" target="appointment" label="Patient Appointments" revLink="patient"/>
+            <element name="dentistAppointments" type="link" target="appointment" label="Dentist Appointments" revLink="dentist"/>
+        </element>
+
+        <!-- DentistSchedule Element -->
+        <element desc="Defines the schedule slots for dentists" name="dentistSchedule">
+            <attribute label="Schedule ID" name="id" type="string" isPK="true"/>
+            <attribute label="Dentist ID" name="dentistId" type="string" isFK="true" target="user"/>
+            <attribute label="Day of Week" name="dayOfWeek" type="byte"/>
+            <attribute label="Start Time" name="startTime" type="time"/>
+            <attribute label="End Time" name="endTime" type="time"/>
+            <attribute label="Availability" name="isAvailable" type="boolean"/>
+            <attribute label="Created Date" name="createdAt" type="datetime"/>
+            <attribute label="Updated Date" name="updatedAt" type="datetime"/>
+            
+            <!-- Relationship definition -->
+            <element name="dentist" type="link" target="user" label="Dentist" revLink="dentistSchedules"/>
+        </element>
+
+        <!-- Service Element -->
+        <element desc="Defines dental services offered" name="service">
+            <attribute label="Service ID" name="id" type="string" isPK="true"/>
+            <attribute label="Dentist ID" name="dentistId" type="string" isFK="true" target="user"/>
+            <attribute label="Service Name" name="name" type="string"/>
+            <attribute label="Description" name="description" type="string"/>
+            <attribute label="Duration (minutes)" name="duration" type="integer"/>
+            <attribute label="Price" name="price" type="decimal"/>
+            <attribute label="Category" name="category" type="string"/>
+            <attribute label="Active Status" name="isActive" type="boolean"/>
+            <attribute label="Created Date" name="createdAt" type="datetime"/>
+            <attribute label="Updated Date" name="updatedAt" type="datetime"/>
+            
+            <!-- Relationship definitions -->
+            <element name="dentist" type="link" target="user" label="Provider" revLink="providedServices"/>
+            <element name="appointments" type="link" target="appointment" label="Appointments" revLink="service"/>
+        </element>
+
+        <!-- Appointment Element -->
+        <element desc="Defines properties of a dental appointment" name="appointment">
+            <attribute label="Appointment ID" name="id" type="string" isPK="true"/>
+            <attribute label="Patient ID" name="patientId" type="string" isFK="true" target="user"/>
+            <attribute label="Dentist ID" name="dentistId" type="string" isFK="true" target="user"/>
+            <attribute label="Service ID" name="serviceId" type="string" isFK="true" target="service"/>
+            <attribute label="Start Time" name="startTime" type="datetime"/>
+            <attribute label="End Time" name="endTime" type="datetime"/>
+            <attribute enum="appointmentStatus" label="Status" name="status" type="byte"/>
+            <attribute label="Notes" name="notes" type="string"/>
+            <attribute label="Created Date" name="createdAt" type="datetime"/>
+            <attribute label="Updated Date" name="updatedAt" type="datetime"/>
+            
+            <!-- Relationship definitions -->
+            <element name="patient" type="link" target="user" label="Patient" revLink="patientAppointments"/>
+            <element name="dentist" type="link" target="user" label="Dentist" revLink="dentistAppointments"/>
+            <element name="service" type="link" target="service" label="Service" revLink="appointments"/>
+            <element name="reminders" type="link" target="reminder" label="Reminders" revLink="appointment"/>
+        </element>
+
+        <!-- Reminder Element -->
+        <element desc="Defines properties of appointment reminders" name="reminder">
+            <attribute label="Reminder ID" name="id" type="string" isPK="true"/>
+            <attribute label="Appointment Reference" name="appointmentId" type="string" isFK="true" target="appointment"/>
+            <attribute label="Type" name="type">
+                <enumeration basetype="byte">
+                    <value label="Email" name="email" value="1"/>
+                    <value label="SMS" name="sms" value="2"/>
+                </enumeration>
+            </attribute>
+            <attribute label="Status" name="status">
+                <enumeration basetype="byte">
+                    <value label="Pending" name="pending" value="1"/>
+                    <value label="Sent" name="sent" value="2"/>
+                    <value label="Failed" name="failed" value="3"/>
+                </enumeration>
+            </attribute>
+            <attribute label="Send At" name="sendAt" type="datetime"/>
+            <attribute label="Sent At" name="sentAt" type="datetime"/>
+            <attribute label="Created Date" name="createdAt" type="datetime"/>
+            <attribute label="Updated Date" name="updatedAt" type="datetime"/>
+            
+            <!-- Relationship definition -->
+            <element name="appointment" type="link" target="appointment" label="Appointment" revLink="reminders"/>
+        </element>
+
+        <!-- Validation Methods -->
+        <methods>
+            <method library="dental:validation.js" name="isUserValid" static="true"/>
+            <method library="dental:validation.js" name="isScheduleValid" static="true"/>
+            <method library="dental:validation.js" name="isAppointmentValid" static="true"/>
+        </methods>
+    </srcSchema>
+</entities>
